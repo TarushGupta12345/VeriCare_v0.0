@@ -1,5 +1,9 @@
+# local virtual environment
 venv/
+# Python cache folders
 __pycache__/
 *.py[cod]
+# pip “egg” files
 *.egg-info/
+#environment variables
 .env
