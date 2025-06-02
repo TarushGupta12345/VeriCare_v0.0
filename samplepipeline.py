@@ -4,7 +4,11 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
+
 client = OpenAI()  
+g_cse_key = os.getenv["GOOGLE_CSE_API_KEY"]
+g_cse_cx = os.getenv("GOOGLE_CSE_CX")
+
 
 def process_bill_image(image_path: str) -> str:
     """
@@ -13,7 +17,60 @@ def process_bill_image(image_path: str) -> str:
     with open(image_path, "rb") as img_f:
         return base64.b64encode(img_f.read()).decode("utf-8")
 
-def identify_clerical_errors_2(base64_image: str) -> str:
+def identify_CPT_codes(base64_image: str) -> str:
+    """
+    Sends a system prompt + user prompt (including the base64 image)
+    to gpt-4o-mini (vision) using the v1 Chat Completions API.
+    """
+    with open("prompt_CPT.txt", "r", encoding="utf-8") as f:
+        prompt_CPT = f.read()
+
+    messages = [
+        {
+            "role": "system",
+            "content": prompt_CPT
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Here is the bill—please parse it accurately."
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/png;base64,{base64_image}"
+                    }
+                }
+            ]
+        }
+    ]
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",  
+        messages=messages
+    )
+
+    code_string = response.choices[0].message.content
+
+    arr = [code.strip() for code in code_string.split(",") if code.strip()]
+
+    with (open("CPT_codes.txt", "r", encoding="utf-8") as f):
+        cpt_dict = f.read()
+
+    for code in arr:
+        code = int(code)
+    
+    
+
+
+    
+
+
+
+
+def identify_clerical_errors(base64_image: str) -> str:
     """
     Sends a system prompt + user prompt (including the base64 image)
     to gpt-4o-mini (vision) using the v1 Chat Completions API.
@@ -53,6 +110,6 @@ def identify_clerical_errors_2(base64_image: str) -> str:
 if __name__ == "__main__":
     image_path = "medicalbills/4_18_25.png"
     b64 = process_bill_image(image_path)
-    output = identify_clerical_errors_2(b64)
+    output = identify_clerical_errors(b64)
     print("=== Model Output ===")
     print(output)

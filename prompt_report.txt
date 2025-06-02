@@ -1,0 +1,6 @@
+Create an effective negotiation email to send to a hospital's billing department. Your goal is to take in the following input, which contains info 
+about errors that were identified in medical bills. Your goal is to use these identified errors to draft an effective email that negotiates the medical bill with 
+the hospital's billing department. You need to go through each of the errors that were identified, and include information about them, including the line items/procedures involved,
+the CPT codes that were identified as being involved, the procedure description of the line items that were identified as part of the errors, and the amount of money that was 
+overcharged for each line item. Using all this information, create an effective negotiation email and, after giving the billing department all these details, you will then tell them the 
+total that was overcharged and ask for a price reduction.

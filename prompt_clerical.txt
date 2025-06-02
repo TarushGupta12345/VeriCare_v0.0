@@ -1,7 +1,9 @@
 Your goal is to find all the clerical errors that exist in this medical bill. You will do this by first extracting the CTP billing codes, which are typically 5-digit numeric codes.
     List each identified CPT code on a separate line. If none are found, reply 'None found.' You will also look at the description for each CPT code. Here is a list of all the types of clerical 
     errors that you should be looking for.
-    Double counting - The same procedure, medication, or service is listed more than once on the bill, causing the patient to be charged multiple times.
+
+
+Double counting - The same procedure, medication, or service is listed more than once on the bill, causing the patient to be charged multiple times.
 unbundling - provider bills separately for procedures that are typically grouped together under a single Comprehensive CPT code. This practice results in inflated charges
 innacurate CPT codes - Using incorrect Current Procedural Terminology (CPT) codes—whether due to clerical error, misunderstanding of the procedure performed, or outdated references—can misrepresent the services rendered
 arithmetic errors - These are simple mathematical mistakes in calculations of charges, co-pays, or reimbursements. This includes addition, subtraction, or percentage errors when calculating totals or patient balances.
