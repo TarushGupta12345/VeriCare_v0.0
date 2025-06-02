@@ -1,66 +1,58 @@
 import os
-import pytesseract
-from PIL import Image
-from langchain.prompts import PromptTemplate
+import base64
 from dotenv import load_dotenv
-from langchain_community.chat_models import ChatOpenAI
-from langchain_openai import ChatOpenAI
-from langchain.chains import LLMChain
+from openai import OpenAI
+
 load_dotenv()
-
-
-os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
-
-llm = ChatOpenAI(model_name="gpt-o4-mini", openai_api_key=os.environ["OPENAI_API_KEY"])
+client = OpenAI()  
 
 def process_bill_image(image_path: str) -> str:
-    try:
-        image = Image.open(image_path)
-    except Exception as e:
-        print(f"Error opening image: {e}")
-        return
-    
-    bill_text = pytesseract.image_to_string(image)
+    """
+    Reads the image file and returns a base64‐encoded string.
+    """
+    with open(image_path, "rb") as img_f:
+        return base64.b64encode(img_f.read()).decode("utf-8")
 
-    bill_lines = [line.strip() for line in bill_text.splitlines() if line.strip()]
-    bill_lines_block = "\n".join(bill_lines)
-    return bill_lines_block
-    
-
-def identify_clerical_errors(bill_lines_block: str) -> str:
-
+def identify_clerical_errors_2(base64_image: str) -> str:
+    """
+    Sends a system prompt + user prompt (including the base64 image)
+    to gpt-4o-mini (vision) using the v1 Chat Completions API.
+    """
     with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
         prompt_clerical = f.read()
 
+    messages = [
+        {
+            "role": "system",
+            "content": prompt_clerical
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Here is the bill—please parse it accurately."
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/png;base64,{base64_image}"
+                    }
+                }
+            ]
+        }
+    ]
 
-    prompt_template = PromptTemplate(
-        input_variables=["bill_lines_joined"],
-        template=prompt_clerical
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",  
+        messages=messages
     )
 
-    chain = LLMChain(llm=llm, prompt=prompt_template)
+    return response.choices[0].message.content
 
-    clerical_errors_output = chain.run(bill_lines_joined=bill_lines_block)
-
-    return "Clerical Errors Found: \n" + clerical_errors_output
-
-def identify_goodfaith_errors(bill_lines_block: str) -> str:
-    with open("prompt_faith.txt", "r", encoding="utf-8") as f:
-        prompt_faith = f.read()
-    prompt_template = PromptTemplate(
-        input_variables=["bill_lines_joined"],
-        template=prompt_faith
-    )
-
-    chain = LLMChain(llm=llm, prompt=prompt_template)
-
-    goodfaith_errors_output = chain.run(bill_lines_joined=bill_lines_block)
-
-    return "Identiffied Good Faith Errors: \n" + goodfaith_errors_output
-
-def run_bill_analysis(image_path: str):
-    bill_lines_block = process_bill_image(image_path)
-    print(identify_clerical_errors(bill_lines_block))
-
-image_path = "4:18:25 copy.png"
-run_bill_analysis(image_path)
+if __name__ == "__main__":
+    image_path = "medicalbills/4_18_25.png"
+    b64 = process_bill_image(image_path)
+    output = identify_clerical_errors_2(b64)
+    print("=== Model Output ===")
+    print(output)
