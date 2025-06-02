@@ -1,0 +1,49 @@
+Your goal is to find all the clerical errors that exist in this medical bill. You will do this by first extracting the CTP billing codes, which are typically 5-digit numeric codes.
+    List each identified CPT code on a separate line. If none are found, reply 'None found.' You will also look at the description for each CPT code. Here is a list of all the types of clerical 
+    errors that you should be looking for.
+    Double counting - The same procedure, medication, or service is listed more than once on the bill, causing the patient to be charged multiple times.
+unbundling - provider bills separately for procedures that are typically grouped together under a single Comprehensive CPT code. This practice results in inflated charges
+innacurate CPT codes - Using incorrect Current Procedural Terminology (CPT) codes—whether due to clerical error, misunderstanding of the procedure performed, or outdated references—can misrepresent the services rendered
+arithmetic errors - These are simple mathematical mistakes in calculations of charges, co-pays, or reimbursements. This includes addition, subtraction, or percentage errors when calculating totals or patient balances.
+obsolete/unrecognized codes - This refers to the use of outdated CPT, ICD-10, or HCPCS codes, or codes that have been retired or are no longer recognized by payers.
+Additional Code - This occurs when more codes than necessary are submitted for a single service. Sometimes, it overlaps with unbundling or involves billing the same service more than once.
+Incorrect type of code - This refers to using a code from the wrong coding system or category. For example, using a CPT code where an HCPCS Level II code is required, or using a diagnosis code (ICD-10) in a place where a procedure code (CPT) should be.
+Upcoding - Upcoding happens when a provider bills for a more expensive service or procedure than what was actually performed. It’s often considered fraudulent if intentional.
+inpatient vs outpatient - This refers to the classification of a patient care setting, which directly affects billing codes, reimbursement rates, and coverage.
+inpatient overstaying error - Occurs when billing continues for inpatient care even after the patient was discharged or no longer required inpatient-level services.
+additional procedure counting - Refers to counting or billing for more procedures than were actually performed.
+additional unit counting - This happens when more units of a service or item (e.g., medications, supplies, therapy minutes) are billed than were administered
+unrecieved/cancelled procedure counting - Billing for procedures that were scheduled but never performed, such as those that were cancelled due to patient conditions, scheduling conflicts, or technical issues.
+unrecieved/cancelled unit counting - Charging for units of care or items that were not delivered, such as cancelled medication orders or therapies not administered.
+generic vs name brand costs - Errors in pricing or coding medications when a generic version is available but a name-brand code or cost is used instead—especially when the generic was administered.
+wrong room type/level of care - Billing for a higher-acuity or specialized room (e.g., ICU, private room, telemetry) when a patient was actually placed in a lower-level or general unit.
+routine/included items - This refers to billing separately for items or services that are bundled into room charges or procedural fees and not supposed to be itemized.
+multiple bills - Occurs when the same service or encounter is billed more than once, either due to human error, system issues, or miscommunication between departments.
+modifier misuse or omission - Incorrect use or omission of CPT/HCPCS modifiers (e.g., -25, -59, -76) which clarify service variations (e.g., repeat procedure, separate site).
+Tiered Pricing for Lab Tests - Hospitals often charge marked-up rates for lab tests (e.g., $400 for a CBC that costs $20 at a retail lab).
+Excessive Supply Charges - Routine supplies (gloves, syringes, basic bandages) are itemized individually at inflated rates
+Duplicate Provider Billing - When multiple providers bill for the same service, especially during surgeries (e.g., two surgeons, or a surgeon and assistant, both billing primary CPT).
+
+To identify the errors, compare it to the necessary information. For example, for unbundling, you may need to compare different CPT codes and line items while, 
+for incorrect CPT code, you may only need to compare the CPT code against the description. Thoroughly look through the bill and identify all the errors that you can from the bill using the list of errors 
+provided. First, you will compile a list of all the errors that you have found. You will first list the type of error, all the CPT codes, descriptions, and prices that are involved with this 
+specific error, and you will then list the amount of money that can be saved by correcting this error. In some cases, you may also need to search up the CPT code to get more information on it. For example, you may want to see if some procedures
+that should be included were added separate procedures (which would result in the patient overpaying for the bill).
+
+After you finish this, you will then generate a list of questions that are applicable to this medical bill using the list of errors. This list of questions will be for the customer, and it 
+should be asking clarifying questions that could help you in further identifying clerical errors that you were not able to identify with the itemized bill alone. For example, if the bill states 
+that it was inpatient for 3 days, some of the questions you may want to generate are:
+    Were you inpatient?
+    How many days were you inpatient for?
+
+Another example is if the itemized bill claims that the patient received x units of medication, you can ask:
+How many units of this medication did you receive?
+
+Your output should look like the following:
+    1. List of errors that you identified without any input from the user - Should include
+        a. The type of error
+        b. The amount of money that can be saved by fixing this error
+        c. CPT Codes of any line items/procedures involved with the error (could be multiple or just one, depending on the type of error)
+        d. Description of the relevant line items/procedures
+        e. Price of the relevant line items/procedures
+    2. List of clarifying questions that you generated to ask the user that could help you identify more clerical errors.
