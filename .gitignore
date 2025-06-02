@@ -9,3 +9,4 @@ __pycache__/
 .env
 #medical bill images
 medicalbills/
+.DS_Store
