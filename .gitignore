@@ -7,3 +7,5 @@ __pycache__/
 *.egg-info/
 #environment variables
 .env
+#medical bill images
+medicalbills/
