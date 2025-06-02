@@ -8,5 +8,4 @@ __pycache__/
 #environment variables
 .env
 #medical bill images
-medicalbills/
 .DS_Store
