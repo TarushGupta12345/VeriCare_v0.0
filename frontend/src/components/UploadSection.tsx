@@ -1,0 +1,189 @@
+import React, { useRef, useState } from 'react';
+import { Upload, FileCheck, DollarSign, Mail, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
+
+interface UploadSectionProps {
+  uploadedFile: File | null;
+  uploadStatus: 'idle' | 'uploading' | 'success' | 'error';
+  analysisResult: {
+    overchargeAmount: number;
+    errorCount: number;
+    emailSent: boolean;
+  } | null;
+  onFileUpload: (file: File) => void;
+  onReset: () => void;
+}
+
+const UploadSection: React.FC<UploadSectionProps> = ({ 
+  uploadedFile, 
+  uploadStatus, 
+  analysisResult,
+  onFileUpload,
+  onReset
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragActive, setDragActive] = useState(false);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      onFileUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    if (e.target.files && e.target.files[0]) {
+      onFileUpload(e.target.files[0]);
+    }
+  };
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  return (
+    <div className="w-full max-w-3xl mx-auto">
+      <h2 className="text-3xl font-bold text-center text-blue-900 mb-6">
+        Upload Your Medical Bill
+      </h2>
+      <p className="text-center text-gray-700 mb-8">
+        Simply upload your itemized medical bill and our AI will analyze it for errors and overcharges.
+      </p>
+
+      {uploadStatus === 'idle' && (
+        <div 
+          className={`border-2 border-dashed rounded-lg p-8 text-center ${
+            dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+          }`}
+          onDragEnter={handleDrag}
+          onDragOver={handleDrag}
+          onDragLeave={handleDrag}
+          onDrop={handleDrop}
+        >
+          <Upload className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">
+            Drag and drop your bill here
+          </h3>
+          <p className="text-gray-600 mb-4">
+            or
+          </p>
+          <button
+            onClick={handleButtonClick}
+            className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Browse Files
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept=".pdf,.jpg,.jpeg,.png"
+            onChange={handleChange}
+          />
+          <p className="mt-4 text-sm text-gray-500">
+            Supported formats: PDF, JPG, PNG
+          </p>
+        </div>
+      )}
+
+      {uploadStatus === 'uploading' && (
+        <div className="border-2 rounded-lg p-8 text-center bg-blue-50 border-blue-200">
+          <div className="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">
+            Analyzing your bill...
+          </h3>
+          <p className="text-gray-600">
+            This will just take a moment
+          </p>
+          <div className="mt-6 w-full bg-gray-200 rounded-full h-2.5">
+            <div className="bg-blue-600 h-2.5 rounded-full w-3/4 animate-pulse"></div>
+          </div>
+        </div>
+      )}
+
+      {uploadStatus === 'success' && analysisResult && (
+        <div className="border-2 rounded-lg p-8 bg-white border-green-200 shadow-lg">
+          <div className="flex items-center justify-center mb-6">
+            <CheckCircle className="h-12 w-12 text-green-600" />
+          </div>
+          <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">
+            Analysis Complete!
+          </h3>
+          
+          <div className="bg-green-50 p-6 rounded-lg mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-gray-700">Uploaded File:</span>
+              <span className="font-medium">{uploadedFile?.name}</span>
+            </div>
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-gray-700">Errors Found:</span>
+              <span className="font-medium">{analysisResult.errorCount}</span>
+            </div>
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-gray-700">Potential Savings:</span>
+              <span className="text-2xl font-bold text-green-600">${analysisResult.overchargeAmount.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-700">Dispute Email:</span>
+              <span className="font-medium flex items-center text-green-600">
+                <CheckCircle className="h-4 w-4 mr-1" />
+                Sent
+              </span>
+            </div>
+          </div>
+          
+          <div className="bg-blue-50 p-6 rounded-lg mb-6">
+            <h4 className="font-semibold text-blue-800 mb-3">What happens next?</h4>
+            <ol className="list-decimal list-inside space-y-2 text-gray-700">
+              <li>The hospital will review your dispute (typically 5-10 business days)</li>
+              <li>You'll receive an email notification when they respond</li>
+              <li>If approved, you'll receive a refund or adjusted bill</li>
+            </ol>
+          </div>
+          
+          <button
+            onClick={onReset}
+            className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+          >
+            <RefreshCw className="h-5 w-5 mr-2" />
+            Upload Another Bill
+          </button>
+        </div>
+      )}
+
+      {uploadStatus === 'error' && (
+        <div className="border-2 rounded-lg p-8 text-center bg-red-50 border-red-200">
+          <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">
+            Something went wrong
+          </h3>
+          <p className="text-gray-600 mb-6">
+            We couldn't process your bill. Please try again or contact support.
+          </p>
+          <button
+            onClick={onReset}
+            className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UploadSection;
