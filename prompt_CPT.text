@@ -1,9 +1,0 @@
-Your goal is to find all the clerical errors that exist in this medical bill. You will do this by first extracting the CTP billing codes, which are typically 5-digit numeric codes. 
-
-Please provide the CPT codes in a comma seperated list.
-
-For instance: "12345, 23456, 34567, ..."
-
-If none are found, reply 'None found.'
-
-Do not say ANYTHING ELSE other than the CPT codes or "None found."

@@ -1,3 +1,0 @@
-Go through each line item in the itemized bill, and extract the CPT code and the price for each of them. Then, compare each CPT code to its price and compare it against the Good Faith Estimate for this procedure, 
-which you can find at {source}. If the price is 10% or more over the good faith estimate price, flag it and add it to the list of errors. At the end, compile all of these good faith errors that you have found, and output each error with the 
-CPT code, the good faith price, the price charged, and the difference between these two prices.
