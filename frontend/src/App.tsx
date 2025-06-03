@@ -1,16 +1,9 @@
 import React, { useState } from 'react';
-import { 
-  Upload, 
-  FileCheck, 
-  DollarSign, 
-  Mail, 
-  Shield, 
-  Clock, 
-  CheckCircle,
-  ArrowRight,
-  FileText,
-  AlertCircle,
-  Phone
+import {
+  DollarSign,
+  Shield,
+  Clock,
+  ArrowRight
 } from 'lucide-react';
 import UploadSection from './components/UploadSection';
 import HowItWorks from './components/HowItWorks';
@@ -18,12 +11,10 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 function App() {
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
 
   const handleFileUpload = async (file: File) => {
-    setUploadedFile(file);
     setUploadStatus('uploading');
 
     const formData = new FormData();
@@ -49,7 +40,6 @@ function App() {
   };
 
   const resetUpload = () => {
-    setUploadedFile(null);
     setUploadStatus('idle');
     setAnalysisResult(null);
   };
@@ -103,8 +93,7 @@ function App() {
 
         {/* Upload Section */}
         <section id="upload-section" className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-          <UploadSection 
-            uploadedFile={uploadedFile}
+          <UploadSection
             uploadStatus={uploadStatus}
             analysisResult={analysisResult}
             onFileUpload={handleFileUpload}
