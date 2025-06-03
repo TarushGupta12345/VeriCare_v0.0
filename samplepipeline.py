@@ -12,6 +12,7 @@ def process_bill_image(image_path: str) -> str:
     """
     Reads the image file and returns a base64‐encoded string.
     """
+    
     with open(image_path, "rb") as img_f:
         return base64.b64encode(img_f.read()).decode("utf-8")
 
@@ -54,7 +55,7 @@ def identify_clerical_errors(base64_image: str) -> str:
     return response.choices[0].message.content
 
 if __name__ == "__main__":
-    image_path = "medicalbills/6_5_23.png"
+    image_path = "medicalbills/7_10_24.png"
     b64 = process_bill_image(image_path)
     output = identify_clerical_errors(b64)
     print("=== Model Output ===")
