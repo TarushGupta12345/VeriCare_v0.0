@@ -54,7 +54,7 @@ def identify_clerical_errors(base64_image: str) -> str:
     return response.choices[0].message.content
 
 if __name__ == "__main__":
-    image_path = "medicalbills/7_10_24.png"
+    image_path = "medicalbills/4_18_25.png"  
     b64 = process_bill_image(image_path)
     output = identify_clerical_errors(b64)
     print("=== Model Output ===")
