@@ -20,25 +20,32 @@ import Footer from './components/Footer';
 function App() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
-  const [analysisResult, setAnalysisResult] = useState<{
-    overchargeAmount: number;
-    errorCount: number;
-    emailSent: boolean;
-  } | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
 
-  const handleFileUpload = (file: File) => {
+  const handleFileUpload = async (file: File) => {
     setUploadedFile(file);
     setUploadStatus('uploading');
-    
-    // Simulate API call
-    setTimeout(() => {
-      setUploadStatus('success');
-      setAnalysisResult({
-        overchargeAmount: 1247.83,
-        errorCount: 3,
-        emailSent: true
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('http://localhost:8000/analyze-bill', {
+        method: 'POST',
+        body: formData
       });
-    }, 3000);
+
+      if (!response.ok) {
+        throw new Error('Request failed');
+      }
+
+      const data = await response.json();
+      setAnalysisResult(data.analysis);
+      setUploadStatus('success');
+    } catch (error) {
+      console.error(error);
+      setUploadStatus('error');
+    }
   };
 
   const resetUpload = () => {

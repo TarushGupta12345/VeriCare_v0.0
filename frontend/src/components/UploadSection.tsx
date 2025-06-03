@@ -4,11 +4,7 @@ import { Upload, FileCheck, DollarSign, Mail, AlertCircle, CheckCircle, RefreshC
 interface UploadSectionProps {
   uploadedFile: File | null;
   uploadStatus: 'idle' | 'uploading' | 'success' | 'error';
-  analysisResult: {
-    overchargeAmount: number;
-    errorCount: number;
-    emailSent: boolean;
-  } | null;
+  analysisResult: string | null;
   onFileUpload: (file: File) => void;
   onReset: () => void;
 }
@@ -123,38 +119,17 @@ const UploadSection: React.FC<UploadSectionProps> = ({
           <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">
             Analysis Complete!
           </h3>
-          
+
           <div className="bg-green-50 p-6 rounded-lg mb-6">
             <div className="flex justify-between items-center mb-4">
               <span className="text-gray-700">Uploaded File:</span>
               <span className="font-medium">{uploadedFile?.name}</span>
             </div>
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-gray-700">Errors Found:</span>
-              <span className="font-medium">{analysisResult.errorCount}</span>
-            </div>
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-gray-700">Potential Savings:</span>
-              <span className="text-2xl font-bold text-green-600">${analysisResult.overchargeAmount.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700">Dispute Email:</span>
-              <span className="font-medium flex items-center text-green-600">
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Sent
-              </span>
-            </div>
+            <pre className="whitespace-pre-wrap text-sm text-gray-700">
+              {analysisResult}
+            </pre>
           </div>
-          
-          <div className="bg-blue-50 p-6 rounded-lg mb-6">
-            <h4 className="font-semibold text-blue-800 mb-3">What happens next?</h4>
-            <ol className="list-decimal list-inside space-y-2 text-gray-700">
-              <li>The hospital will review your dispute (typically 5-10 business days)</li>
-              <li>You'll receive an email notification when they respond</li>
-              <li>If approved, you'll receive a refund or adjusted bill</li>
-            </ol>
-          </div>
-          
+
           <button
             onClick={onReset}
             className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
