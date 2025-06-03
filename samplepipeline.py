@@ -53,43 +53,9 @@ def identify_clerical_errors(base64_image: str) -> str:
 
     return response.choices[0].message.content
 
-def generate_report(clerical_issues: str) -> str:
-    """
-    Sends a system prompt + user prompt (including the base64 image)
-    to gpt-4o-mini (vision) using the v1 Chat Completions API.
-    """
-    with open("prompt_report.txt", "r", encoding="utf-8") as f:
-        prompt_report = f.read()
-
-    messages = [
-        {
-            "role": "system",
-            "content": prompt_report
-        },
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "text",
-                    "text": f"Please write the sample email."
-                }
-            ]
-        }
-    ]
-
-    response = client.chat.completions.create(
-        model="gpt-4.1",  
-        messages=messages
-    )
-
-    return response.choices[0].message.content
-
 if __name__ == "__main__":
-    image_path = "medicalbills/6_5_23.png"
+    image_path = "medicalbills/7_10_24.png"
     b64 = process_bill_image(image_path)
     output = identify_clerical_errors(b64)
-    output2 = generate_report(output)
     print("=== Model Output ===")
     print(output)
-    print("=== Report Output ===")
-    print(output2)

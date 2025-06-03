@@ -81,5 +81,8 @@ PLEASE NOTE: If you find any instances of undercharging, IGNORE THEM! We are onl
         - **Price:** \$2,273.94  
       - …  
 
+5. Generate a seperate, convincing report that can be sent to the hospital as an email, detailing all of the errors and providing the relevant information including the CPT codes, the description, the 
+amount saved, and the total amount saved. End with a clear, respectful ask for confirmation of the revised balance. Keep the tone professional, concise, and courteous, but also firm.
+
 Be thorough and precise. Your response must first present all identified errors (with savings calculations), then the targeted clarifying questions. ```
 
