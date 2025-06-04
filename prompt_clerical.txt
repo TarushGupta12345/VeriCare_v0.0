@@ -121,8 +121,8 @@ c. Add the errors using the methods described above.
 2. **Total Amount Saved: Range**: Include both the **Lower End** and **Higher End** in returning this range like so:
    "By negotiating this bill, you will be able to save anywhere from $123.45 - $234.56"
 
-3. **Separate Negotiation Email** to the hospital’s billing department. Before you start writing the email, please mark this section for the user 
-by saying "Email to send to hospital's billing department." 
+3. **Separate Negotiation Email** to the hospital’s billing department. VERY IMPORTANT: IF THE AMOUNT SAVED IS EQUAL TO 0 DOLLARS, YOU MUST SAY "No negotiation email was generated as no errors were identified in the bill." INSTEAD OF THE EMAIL AND SKIP THE REST THE WHOLE PROMPT BY ENDING THE MESSAGE AFTER THIS STATEMENT.
+Before you start writing the email, please mark this section for the user by saying "Email to send to hospital's billing department:"
 
    The email should:  
    1. **Subject Line**  (“Request for Billing Adjustment”).  
