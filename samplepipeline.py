@@ -102,7 +102,7 @@ def identify_clerical_errors_pdf(base64_images: list) -> str:
     return response.choices[0].message.content
 
 if __name__ == "__main__":
-    image_path = "4_18_25.pdf"
+    image_path = "medicalbills/kaiser hospital bill.pdf"
     ext = os.path.splitext(image_path)[1].lower()
 
     if ext == ".pdf":
