@@ -1,7 +1,5 @@
 import React, { useRef, useState } from 'react';
 import { Upload, AlertCircle, RefreshCw } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
 interface UploadSectionProps {
   uploadStatus: 'idle' | 'uploading' | 'success' | 'error';
@@ -113,9 +111,9 @@ const UploadSection: React.FC<UploadSectionProps> = ({
 
       {uploadStatus === 'success' && analysisResult && (
         <div className="border rounded-lg p-8 bg-white shadow">
-          <div className="text-sm text-gray-700 mb-6 space-y-2">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysisResult}</ReactMarkdown>
-          </div>
+          <pre className="whitespace-pre-wrap text-sm text-gray-700 mb-6">
+            {analysisResult}
+          </pre>
           <button
             onClick={onReset}
             className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
