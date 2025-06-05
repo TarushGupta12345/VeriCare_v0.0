@@ -112,19 +112,27 @@ function App() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-xl font-semibold text-blue-800 mb-3">How does VeriCare work?</h3>
-              <p className="text-gray-700">Our AI analyzes the bill for all errors and overcharges. We draft a message (either email or phone) to the billing department to negotiate the costs.</p>
+              <p className="text-gray-700">Our AI analyzes errors and overcharges by examining various coding formats. We draft a message (either email or phone) to the billing department to negotiate the costs</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-xl font-semibold text-blue-800 mb-3">Is my medical information secure?</h3>
-              <p className="text-gray-700">Absolutely. We don't save any of your personally identifiable information (PII). The "Veri" in VeriCare is derived from <i>verus</i>, the Latin word for truth or trust. You can trust VeriCare with your medical data.</p>
+              <h3 className="text-xl font-semibold text-blue-800 mb-3">How do you request an itemized bill?</h3>
+              <p className="text-gray-700">The process of getting an itemized bill can be very complicated at times (and we are working on automating this process completely). We have a complete guide to requesting an itemized bill on our page: <a href="https://vericareai.com/placeholderlink" className="text-blue-600 hover:text-blue-800">vericareai.com/placeholderlink</a></p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-xl font-semibold text-blue-800 mb-3">How long does the process take?</h3>
               <p className="text-gray-700">Our AI analysis takes just minutes. The hospital's response time varies, but most users see results within 2-3 weeks.</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-xl font-semibold text-blue-800 mb-3">What if the hospital rejects my dispute?</h3>
-              <p className="text-gray-700">If the hospital rejects your dispute, you can always resubmit your itemized bill and try again. In our v0, we don't have any builtin functionality to help with this, but in future versions, we will absolutely address it.</p>
+              <h3 className="text-xl font-semibold text-blue-800 mb-3">What happens if the hospital rejects it?</h3>
+              <p className="text-gray-700">If the hospital rejects your dispute, you can always resubmit your itemized bill and try again. In our v0, we don’t have any builtin functionality to help with this, but in future versions, we will absolutely address it.</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-xl font-semibold text-blue-800 mb-3">Does this cost any money?</h3>
+              <p className="text-gray-700">We only charge a 10% fee of the money you save if the hospital refunds you on your bill. If your negotiations don’t result in refunds, you will not have to pay us at all: we win when you win.</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-xl font-semibold text-blue-800 mb-3">Is my medical information secure?</h3>
+              <p className="text-gray-700">Absolutely. We don’t save any of your personally identifiable information (PII). The "Veri" in VeriCare is derived from <i>verus</i>, the Latin word for truth or trust. You can trust VeriCare with your medical data.</p>
             </div>
           </div>
         </section>
