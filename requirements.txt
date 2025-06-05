@@ -5,3 +5,6 @@ openai
 pdf2image
 pillow
 pillow-heif
+langchain
+langchain-openai
+composio-langchain
