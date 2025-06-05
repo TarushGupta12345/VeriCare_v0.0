@@ -85,11 +85,11 @@ const UploadSection: React.FC<UploadSectionProps> = ({
             ref={fileInputRef}
             type="file"
             className="hidden"
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png,.heic"
             onChange={handleChange}
           />
           <p className="mt-4 text-sm text-gray-500">
-            Supported formats: PDF, JPG, PNG
+            Supported formats: PDF, JPG, PNG, HEIC
           </p>
         </div>
       )}
