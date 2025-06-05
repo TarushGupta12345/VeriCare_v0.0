@@ -144,16 +144,20 @@ def identify_clerical_errors_pdf(base64_images: list) -> str:
         prompt_clerical = f.read()
 
     user_content = [{"type": "text", "text": "Please analyze the provided bill."}]
+    codes_context = search_up_codes_pdf(base64_images)
+
     for b64 in base64_images:
         user_content.append({
             "type": "image_url",
             "image_url": {
                 "url": f"data:image/png;base64,{b64}"
             }
-        }, {
-            "type": "text",
-            "text": f"Here are the list of codes and specific descriptions: {search_up_codes_pdf(base64_images)}"
         })
+
+    user_content.append({
+        "type": "text",
+        "text": f"Here are the list of codes and specific descriptions: {codes_context}"
+    })
 
     messages = [
         {"role": "system", "content": prompt_clerical},
