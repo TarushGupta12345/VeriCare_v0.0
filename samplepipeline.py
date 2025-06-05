@@ -4,8 +4,11 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from pdf2image import convert_from_path
 from PIL import Image
+from pillow_heif import register_heif_opener
+import tempfile
 
 load_dotenv()
+register_heif_opener()
 
 client = OpenAI()
 
@@ -17,6 +20,14 @@ def process_bill_image(image_path: str):
     ext = os.path.splitext(image_path)[1].lower()
     if ext == ".pdf":
         return process_bill_image_pdf(image_path)
+    elif ext in [".heic", ".heif"]:
+        with Image.open(image_path) as img:
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+                img.save(tmp.name, format="PNG")
+                tmp.seek(0)
+                encoded = base64.b64encode(tmp.read()).decode("utf-8")
+        os.remove(tmp.name)
+        return encoded
     else:
         with open(image_path, "rb") as img_f:
             return base64.b64encode(img_f.read()).decode("utf-8")
