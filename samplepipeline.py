@@ -6,6 +6,7 @@ from pdf2image import convert_from_path
 from PIL import Image
 from pillow_heif import register_heif_opener
 import tempfile
+import searchpipeline
 
 load_dotenv()
 register_heif_opener()
@@ -45,9 +46,57 @@ def process_bill_image_pdf(pdf_path: str) -> list:
         with open(temp_image_path, "rb") as img_f:
             encoded = base64.b64encode(img_f.read()).decode("utf-8")
             base64_images.append(encoded)
-        os.remove(temp_image_path)  # Clean up temp file
+        os.remove(temp_image_path) 
 
     return base64_images
+
+def search_up_codes(base64_image: str) -> str:
+    with open("prompt_search.txt", "r", encoding="utf-8") as f:
+        prompt_search = f.read()
+    
+    messages = [
+        {
+            "role":"system",
+            "content": prompt_search
+        },
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Please analyze the provided bill."},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/png;base64,{base64_image}"
+                    }
+                }
+            ]
+        }
+    ]
+
+    response = client.chat.completions.create(
+        model="gpt-4.1",
+        messages=messages
+    )
+
+    s = response.choices[0].message.content
+    results = [
+    f"{s.split(':', 1)[0].strip()} code {item.strip()}"
+    for item in s.split(":", 1)[1].split(",")
+    ]
+
+    full_context = "Identified clerical errors:\n"
+
+    for result in results:
+        query = f"Query: '{result} description' \n Country: US \n Language: English \n Limit: 2"
+        single_context = f"{result}: {searchpipeline.search_up_codes(query)}\n"
+        full_context += single_context + "\n\n"
+    return full_context
+
+def search_up_codes_pdf(base64_images: list) -> str:
+    total = "Identified codes: "
+    for base64_image in base64_images:
+        total += search_up_codes(base64_image) + "\n\n"
+    return total
 
 def identify_clerical_errors(base64_image: str) -> str:
     """
@@ -71,6 +120,10 @@ def identify_clerical_errors(base64_image: str) -> str:
                     "image_url": {
                         "url": f"data:image/png;base64,{base64_image}"
                     }
+                },
+                {
+                    "type": "text",
+                    "text": f"Here are the list of codes and specific descriptions: {search_up_codes(base64_image)}"
                 }
             ]
         }
@@ -80,7 +133,6 @@ def identify_clerical_errors(base64_image: str) -> str:
         model="gpt-4.1",
         messages=messages
     )
-
     return response.choices[0].message.content
 
 def identify_clerical_errors_pdf(base64_images: list) -> str:
@@ -98,6 +150,9 @@ def identify_clerical_errors_pdf(base64_images: list) -> str:
             "image_url": {
                 "url": f"data:image/png;base64,{b64}"
             }
+        }, {
+            "type": "text",
+            "text": f"Here are the list of codes and specific descriptions: {search_up_codes_pdf(base64_images)}"
         })
 
     messages = [

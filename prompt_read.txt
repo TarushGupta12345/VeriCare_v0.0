@@ -1,0 +1,16 @@
+Given the provided bill, your job is to:
+## 1. Extract Billing Codes.
+- Identify every billing code on the bill. This includes:  
+  - **CPT** (5-digit numeric)  
+  - **HCPCS** (alphanumeric, typically starting with a letter)  
+  - **ADA** (dental codes, e.g. D####)  
+  - **UB-04 revenue codes** (4-digit numeric)  
+  - Any other recognized procedure/service code sets THAT ARE NOT INSURANCE RELATED (usually 99xxxxxx, 97xxxxxx, etc.).  
+- Alongside each code, copy the exact description text from the bill.  
+- If no billing codes are present, reply “None found” and stop generating.  
+-DO NOT GENERATE A TABLE OR DASHES: Instead, create a list of bullet points.
+
+**Focus only on billing codes** (e.g. CPT, HCPCS, ADA, UB-04 revenue codes, etc.). Do **not** attempt to interpret or audit insurance/payment codes (e.g., lines beginning with “99…” or othher insurer adjustments). If a code is clearly an insurance/payment or adjustment code, skip it.  
+
+Your final return value should be the code format name, ":", and a list of each of the codes, seperated by a comma and a space. For instance:
+"CPT: 45385, 99512, 45835, 88305"
