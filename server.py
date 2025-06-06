@@ -4,9 +4,7 @@ import tempfile
 import shutil
 import os
 from samplepipeline import (
-    process_bill_image,
-    identify_clerical_errors,
-    identify_clerical_errors_pdf,
+    identify_clerical_errors
 )
 
 app = FastAPI()
@@ -26,13 +24,7 @@ def analyze_bill(file: UploadFile = File(...)):
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
             shutil.copyfileobj(file.file, tmp)
             temp_path = tmp.name
-        ext = os.path.splitext(temp_path)[1].lower()
-        if ext == ".pdf":
-            images = process_bill_image(temp_path)
-            result = identify_clerical_errors_pdf(images)
-        else:
-            image = process_bill_image(temp_path)
-            result = identify_clerical_errors(image)
+        result = identify_clerical_errors(temp_path)
         os.remove(temp_path)
         return {"analysis": result}
     except Exception as e:

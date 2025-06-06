@@ -21,14 +21,16 @@ you will choose the higher charge to negotiate. REMEMBER TO DO THIS AS IT IS VER
   - **UB-04 revenue codes** (4-digit numeric)  
   - Any other recognized procedure/service code sets THAT ARE NOT INSURANCE RELATED (usually 99xxxxxx, 97xxxxxx, etc.).  
 - List each extracted billing code on its own line, exactly as printed.  
-- Alongside each code, copy the exact description text from the bill.  
+- Alongside each code, copy the exact description text from the bill (with the heading "Bill Description").
+
+-**IMPORTANT:** use search for each individual billing code and identify the exact description of the code online, and include it with the heading "Online Description".
+
 - If no billing codes are present, reply “None found.”  
 -DO NOT GENERATE A TABLE OR DASHES: Instead, create a list of bullet points.
 ---
 ## 2. Error Categories
 Review each billing line item (code, description, date, quantity, amount) for **these clerical overcharging errors**. If you do find 
 any that are not listed, please include them and list them as an "Other Error".
-
 
    - **Double-Counting**  
      The same procedure, service, or medication appears twice, causing duplicate charges.
