@@ -10,7 +10,14 @@ import tempfile
 load_dotenv()
 register_heif_opener()
 
-client = OpenAI()
+client = OpenAI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1",
+    default_headers={
+        "HTTP-Referer": "https://github.com/",  # optional, update with your repo
+        "X-Title": "VeriCare"
+    },
+)
 '''
 def process_bill_image(image_path: str):
     """
@@ -67,35 +74,34 @@ def identify_clerical_errors(image_path: str) -> str:
                 image_path = tmp.name
 
     file = client.files.create(
-    file=open(image_path, "rb"),
-    purpose="user_data"
-)
-    message = client.responses.create(
-    model="gpt-4.1",
-    tools=[{"type": "web_search_preview"}],
-    input=[
+        file=open(image_path, "rb"),
+        purpose="user_data"
+    )
+
+    messages = [
         {
-            "role": "system",  
-            "content": prompt_clerical
+            "role": "system",
+            "content": prompt_clerical,
         },
         {
             "role": "user",
             "content": [
                 {
-                    "type": "input_file",
-                    "file_id": file.id,
+                    "type": "image_file",
+                    "image_file": {"file_id": file.id},
                 },
                 {
-                    "type": "input_text",
+                    "type": "text",
                     "text": "Please analyze the provided bill.",
                 },
-            ]
-        }
+            ],
+        },
     ]
-)
+
     response = client.chat.completions.create(
-        model="gpt-4.1",
-        messages=message
+        model="openrouter/gpt-4o-mini-search-preview",
+        messages=messages,
+        tools=[{"type": "web_search"}],
     )
 
     return response.choices[0].message.content
@@ -103,7 +109,6 @@ def identify_clerical_errors(image_path: str) -> str:
 
 if __name__ == "__main__":
     image_path = "medicalbills/4_18_25.pdf"
-    ext = os.path.splitext(image_path)[1].lower()
     output = identify_clerical_errors(image_path)
 
     print("=== Model Output ===")
