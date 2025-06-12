@@ -7,8 +7,12 @@ from pdf2image import convert_from_path
 load_dotenv()
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-MODEL_NAME = "gpt-4o-mini-search-preview"
+# Default to the GPT-4o search preview endpoint as documented by OpenRouter
+OPENROUTER_BASE_URL = os.getenv(
+    "OPENROUTER_BASE_URL",
+    "https://openrouter.ai/openai/gpt-4o-search-preview/api",
+)
+MODEL_NAME = "gpt-4o-search-preview"
 
 
 def _openrouter_chat_completion(messages):
