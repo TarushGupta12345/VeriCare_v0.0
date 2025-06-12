@@ -5,3 +5,4 @@ openai
 pdf2image
 pillow
 pillow-heif
+python-multipart
