@@ -15,7 +15,7 @@ client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     default_headers={
         "HTTP-Referer": "https://github.com/",  # optional, update with your repo
-        "X-Title": "VeriCare"
+        "X-Title": "VeriCare",
     },
 )
 '''
@@ -58,50 +58,42 @@ def process_bill_image_pdf(pdf_path: str) -> list:
 '''
 
 def identify_clerical_errors(image_path: str) -> str:
-    """
-    Sends a system prompt + user prompt (including a single base64 image)
-    to gpt-4.1 using the v1 Chat Completions API.
-    """
+    """Analyze a bill image or PDF for clerical errors via OpenRouter."""
     with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
         prompt_clerical = f.read()
 
-
     ext = os.path.splitext(image_path)[1].lower()
-    if ext in [".heic", ".heif"]:
-        with Image.open(image_path) as img:
-            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-                img.save(tmp.name, format="PNG")
-                image_path = tmp.name
+    user_content = []
 
-    file = client.files.create(
-        file=open(image_path, "rb"),
-        purpose="user_data"
-    )
+    if ext == ".pdf":
+        pages = convert_from_path(image_path, dpi=150)
+        for page in pages:
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+                page.save(tmp.name, "PNG")
+                file = client.files.create(file=open(tmp.name, "rb"), purpose="vision")
+                user_content.append({"type": "image_file", "image_file": {"file_id": file.id}})
+            os.remove(tmp.name)
+    else:
+        if ext in [".heic", ".heif"]:
+            with Image.open(image_path) as img:
+                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+                    img.save(tmp.name, format="PNG")
+                    image_path = tmp.name
+        file = client.files.create(file=open(image_path, "rb"), purpose="vision")
+        user_content.append({"type": "image_file", "image_file": {"file_id": file.id}})
+
+    user_content.append({"type": "text", "text": "Please analyze the provided bill."})
 
     messages = [
-        {
-            "role": "system",
-            "content": prompt_clerical,
-        },
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "image_file",
-                    "image_file": {"file_id": file.id},
-                },
-                {
-                    "type": "text",
-                    "text": "Please analyze the provided bill.",
-                },
-            ],
-        },
+        {"role": "system", "content": prompt_clerical},
+        {"role": "user", "content": user_content},
     ]
 
     response = client.chat.completions.create(
         model="openrouter/gpt-4o-mini-search-preview",
         messages=messages,
         tools=[{"type": "web_search"}],
+        tool_choice="auto",
     )
 
     return response.choices[0].message.content
