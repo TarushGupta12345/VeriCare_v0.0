@@ -1,6 +1,6 @@
 import os
 import base64
-import requests
+from openai import OpenAI
 from dotenv import load_dotenv
 from pdf2image import convert_from_path
 
@@ -12,23 +12,19 @@ MODEL_NAME = "gpt-4o-mini-search-preview"
 
 
 def _openrouter_chat_completion(messages):
+    """Send chat completion request to OpenRouter via the openai client."""
     if not OPENROUTER_API_KEY:
         raise ValueError("OPENROUTER_API_KEY not set")
 
-    url = f"{OPENROUTER_BASE_URL}/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-        "X-Title": "VeriCare",
-    }
-    payload = {
-        "model": MODEL_NAME,
-        "messages": messages,
-    }
-    response = requests.post(url, headers=headers, json=payload, timeout=60)
-    response.raise_for_status()
-    data = response.json()
-    return data["choices"][0]["message"]["content"]
+    client = OpenAI(base_url=OPENROUTER_BASE_URL, api_key=OPENROUTER_API_KEY)
+
+    completion = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=messages,
+        extra_headers={"X-Title": "VeriCare"},
+    )
+
+    return completion.choices[0].message.content
 
 
 def process_bill_image(image_path: str):
