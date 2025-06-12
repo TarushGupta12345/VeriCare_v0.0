@@ -4,6 +4,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from pdf2image import convert_from_path
 
+POPPLER_PATH = os.getenv("POPPLER_PATH")
+
 load_dotenv()
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -31,7 +33,7 @@ def _openrouter_chat_completion(messages):
     return completion.choices[0].message.content
 
 
-def process_bill_image(image_path: str):
+def process_bill_image(image_path: str) -> str | list[str]:
     """Process a single image or PDF and return base64 encoded string(s)."""
     ext = os.path.splitext(image_path)[1].lower()
     if ext == ".pdf":
@@ -40,9 +42,12 @@ def process_bill_image(image_path: str):
         return base64.b64encode(img_f.read()).decode("utf-8")
 
 
-def process_bill_image_pdf(pdf_path: str) -> list:
+def process_bill_image_pdf(pdf_path: str) -> list[str]:
     """Convert each page of a PDF into a base64 encoded PNG string."""
-    pages = convert_from_path(pdf_path, dpi=150)
+    kwargs = {"dpi": 150}
+    if POPPLER_PATH:
+        kwargs["poppler_path"] = POPPLER_PATH
+    pages = convert_from_path(pdf_path, **kwargs)
     base64_images = []
     for i, page in enumerate(pages):
         temp_image_path = f"temp_page_{i}.png"

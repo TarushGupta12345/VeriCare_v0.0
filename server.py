@@ -20,11 +20,13 @@ app.add_middleware(
 )
 
 @app.post("/analyze-bill")
-def analyze_bill(file: UploadFile = File(...)):
+async def analyze_bill(file: UploadFile = File(...)):
+    temp_path = None
     try:
         suffix = os.path.splitext(file.filename)[1]
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            shutil.copyfileobj(file.file, tmp)
+            content = await file.read()
+            tmp.write(content)
             temp_path = tmp.name
         ext = os.path.splitext(temp_path)[1].lower()
         if ext == ".pdf":
@@ -33,7 +35,9 @@ def analyze_bill(file: UploadFile = File(...)):
         else:
             image = process_bill_image(temp_path)
             result = identify_clerical_errors(image)
-        os.remove(temp_path)
         return {"analysis": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.remove(temp_path)
