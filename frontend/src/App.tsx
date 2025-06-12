@@ -10,6 +10,8 @@ import HowItWorks from './components/HowItWorks';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
+const API_URL = import.meta.env.VITE_BACKEND_URL ?? '';
+
 function App() {
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
@@ -21,7 +23,7 @@ function App() {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:8000/analyze-bill', {
+      const response = await fetch(`${API_URL}/analyze-bill`, {
         method: 'POST',
         body: formData
       });
