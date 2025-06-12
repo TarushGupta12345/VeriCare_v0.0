@@ -1,5 +1,6 @@
 import os
 import base64
+from typing import Union
 from openai import OpenAI
 from dotenv import load_dotenv
 from pdf2image import convert_from_path
@@ -33,7 +34,10 @@ def _openrouter_chat_completion(messages):
     return completion.choices[0].message.content
 
 
-def process_bill_image(image_path: str) -> str | list[str]:
+
+
+
+def process_bill_image(image_path: str) -> Union[str, list[str]]:
     """Process a single image or PDF and return base64 encoded string(s)."""
     ext = os.path.splitext(image_path)[1].lower()
     if ext == ".pdf":
