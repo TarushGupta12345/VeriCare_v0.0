@@ -94,11 +94,14 @@ def analyze_with_web_search(bill_text: str) -> str:
         prompt_clerical = f.read()
 
     search_prompt = (
-        f"{prompt_clerical}\n\nPlease analyze the following medical bill:\n{bill_text}"
+        f"{prompt_clerical}\n\n"
+        "Use an extensive web search to cross-check every line item in the medical bill text below. "
+        "List any discrepancies, provide relevant context, and cite your web sources whenever possible.\n"
+        f"Bill text:\n{bill_text}"
     )
 
     payload = {
-        "model": "openai/gpt-4o:online",  # Or "openai/gpt-4o-search-preview"
+        "model": "mistralai/magistral-medium-2506",
         "messages": [{"role": "user", "content": search_prompt}],
     }
 
