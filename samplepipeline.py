@@ -94,11 +94,16 @@ def analyze_with_web_search(bill_text: str) -> str:
         prompt_clerical = f.read()
 
     search_prompt = (
-        f"{prompt_clerical}\n\nPlease analyze the following medical bill:\n{bill_text}"
+        f"{prompt_clerical}\n\n"
+        "You are connected to Perplexity's Sonar Deep Research engine. "
+        "Search the web thoroughly for each billing code and any known clerical errors, "
+        "typical pricing ranges, or duplicate charge issues. "
+        "Use this information to provide the most comprehensive analysis possible.\n"
+        f"Medical bill text:\n{bill_text}"
     )
 
     payload = {
-        "model": "openai/gpt-4o:online",  # Or "openai/gpt-4o-search-preview"
+        "model": "perplexity/sonar-deep-research",  # Web search model
         "messages": [{"role": "user", "content": search_prompt}],
     }
 

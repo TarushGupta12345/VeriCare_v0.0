@@ -16,7 +16,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-`OPENAI_API_KEY` is required for OCR with OpenAI and `OPENROUTER_API_KEY` is used for web-based analysis. Both variables must be defined for the pipeline to run correctly.
+`OPENAI_API_KEY` is required for OCR with OpenAI and `OPENROUTER_API_KEY` is used for web-based analysis via Perplexity's Sonar Deep Research model on OpenRouter. Both variables must be defined for the pipeline to run correctly.
 
 ## Running
 
