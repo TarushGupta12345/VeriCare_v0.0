@@ -5,14 +5,17 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from pdf2image import convert_from_path
 from PIL import Image
+import json
 
 load_dotenv()
 
-OPENROUTER_API_KEY = os.getenv("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")  # Make sure to set this
+# Setup API keys
+openai_client = OpenAI()
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")  # Set in .env
 
 headers = {
-    "Authorization": f"Bearer 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",
-    "HTTP-Referer": "https://yourdomain.com",  # Replace with your site or GitHub link
+    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+    "HTTP-Referer": "https://yourdomain.com",  # Replace appropriately
     "X-Title": "Medical Bill Analyzer",
     "Content-Type": "application/json",
 }
@@ -39,63 +42,40 @@ def process_bill_image_pdf(pdf_path: str) -> list:
 
     return base64_images
 
-def identify_clerical_errors(base64_image: str) -> str:
+def extract_text_from_image(base64_image: str) -> str:
+    """Uses OpenAI GPT-4o to extract full bill text from an image."""
+    messages = [
+        {"role": "user", "content": [
+            {"type": "text", "text": "Please provide the complete wording of the bill, word for word."},
+            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
+        ]}
+    ]
+
+    response = openai_client.chat.completions.create(
+        model="gpt-4o",
+        messages=messages
+    )
+
+    return response.choices[0].message.content
+
+def analyze_with_web_search(bill_text: str) -> str:
+    """Uses OpenRouter to search the web for additional context or errors."""
     with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
         prompt_clerical = f.read()
 
-    messages = [
-        {
-            "role": "system",
-            "content": prompt_clerical
-        },
-        {
-            "role": "user",
-            "content": [
-                {"type": "text", "text": "Please provide the complete wording of the bill, word for word."},
-                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
-            ]
-        }
-    ]
+    search_prompt = f"{prompt_clerical}\n\nPlease analyze the following medical bill:\n{bill_text}"
 
     payload = {
-        "model": "openai/gpt-4-turbo",  # You can replace this with another OpenRouter-supported model
-        "messages": messages
+        "model": "openai/gpt-4o:online",  # Or "openai/gpt-4o-search-preview"
+        "messages": [
+            {"role": "user", "content": search_prompt}
+        ]
     }
 
     response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
 
     if response.status_code != 200:
-        raise Exception(f"Error: {response.status_code} - {response.text}")
-
-    return response.json()["choices"][0]["message"]["content"]
-
-def identify_clerical_errors_pdf(base64_images: list) -> str:
-    with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
-        prompt_clerical = f.read()
-
-    user_content = [{"type": "text", "text": "Please analyze the provided bill."}]
-    for b64 in base64_images:
-        user_content.append({
-            "type": "image_url",
-            "image_url": {
-                "url": f"data:image/png;base64,{b64}"
-            }
-        })
-
-    messages = [
-        {"role": "system", "content": prompt_clerical},
-        {"role": "user", "content": user_content}
-    ]
-
-    payload = {
-        "model": "openai/gpt-4-turbo",  # Replace if needed
-        "messages": messages
-    }
-
-    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-
-    if response.status_code != 200:
-        raise Exception(f"Error: {response.status_code} - {response.text}")
+        raise Exception(f"Search model error: {response.status_code} - {response.text}")
 
     return response.json()["choices"][0]["message"]["content"]
 
@@ -105,10 +85,16 @@ if __name__ == "__main__":
 
     if ext == ".pdf":
         base64_images = process_bill_image(image_path)
-        output = identify_clerical_errors_pdf(base64_images)
+        combined_text = ""
+        for b64 in base64_images:
+            combined_text += extract_text_from_image(b64) + "\n"
     else:
         base64_image = process_bill_image(image_path)
-        output = identify_clerical_errors(base64_image)
+        combined_text = extract_text_from_image(base64_image)
 
-    print("=== Model Output ===")
-    print(output)
+    print("=== Extracted Bill Text ===")
+    print(combined_text)
+
+    print("\n=== Web-Enhanced Analysis ===")
+    search_output = analyze_with_web_search(combined_text)
+    print(search_output)
