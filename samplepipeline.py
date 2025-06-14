@@ -2,15 +2,18 @@ import os
 import base64
 import requests
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import OpenAI, APIConnectionError
 from pdf2image import convert_from_path
 from PIL import Image
+import pytesseract
+from io import BytesIO
 import json
 
 load_dotenv()
 
 # Setup API keys
-openai_client = OpenAI()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")  # Set in .env
 
 headers = {
@@ -20,6 +23,7 @@ headers = {
     "Content-Type": "application/json",
 }
 
+
 def process_bill_image(image_path: str):
     ext = os.path.splitext(image_path)[1].lower()
     if ext == ".pdf":
@@ -27,6 +31,7 @@ def process_bill_image(image_path: str):
     else:
         with open(image_path, "rb") as img_f:
             return base64.b64encode(img_f.read()).decode("utf-8")
+
 
 def process_bill_image_pdf(pdf_path: str) -> list:
     pages = convert_from_path(pdf_path, dpi=150)
@@ -42,42 +47,67 @@ def process_bill_image_pdf(pdf_path: str) -> list:
 
     return base64_images
 
+
 def extract_text_from_image(base64_image: str) -> str:
     """Uses OpenAI GPT-4o to extract full bill text from an image."""
     messages = [
-        {"role": "user", "content": [
-            {"type": "text", "text": "Please provide the complete wording of the bill, word for word."},
-            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
-        ]}
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Please provide the complete wording of the bill, word for word.",
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{base64_image}"},
+                },
+            ],
+        }
     ]
 
-    response = openai_client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages
-    )
+    try:
+        if openai_client is None:
+            raise APIConnectionError(
+                message="OPENAI_API_KEY not configured", request=None
+            )
+        response = openai_client.chat.completions.create(
+            model="gpt-4o", messages=messages
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"[WARN] OpenAI API failed ({e}), falling back to pytesseract")
+        try:
+            image_bytes = base64.b64decode(base64_image)
+            image = Image.open(BytesIO(image_bytes))
+            return pytesseract.image_to_string(image)
+        except Exception as fallback_error:
+            raise Exception(f"Fallback OCR failed: {fallback_error}")
 
-    return response.choices[0].message.content
 
 def analyze_with_web_search(bill_text: str) -> str:
     """Uses OpenRouter to search the web for additional context or errors."""
     with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
         prompt_clerical = f.read()
 
-    search_prompt = f"{prompt_clerical}\n\nPlease analyze the following medical bill:\n{bill_text}"
+    search_prompt = (
+        f"{prompt_clerical}\n\nPlease analyze the following medical bill:\n{bill_text}"
+    )
 
     payload = {
         "model": "openai/gpt-4o:online",  # Or "openai/gpt-4o-search-preview"
-        "messages": [
-            {"role": "user", "content": search_prompt}
-        ]
+        "messages": [{"role": "user", "content": search_prompt}],
     }
 
-    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload
+    )
 
     if response.status_code != 200:
         raise Exception(f"Search model error: {response.status_code} - {response.text}")
 
     return response.json()["choices"][0]["message"]["content"]
+
 
 if __name__ == "__main__":
     image_path = "medicalbills/4_18_25.pdf"

@@ -4,3 +4,5 @@ python-dotenv
 openai
 pdf2image
 pillow
+pytesseract
+requests
