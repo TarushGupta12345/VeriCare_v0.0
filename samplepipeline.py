@@ -95,13 +95,16 @@ def analyze_with_web_search(bill_text: str) -> str:
 
     search_prompt = (
         f"{prompt_clerical}\n\n"
-        "Use an extensive web search to cross-check every line item in the medical bill text below. "
-        "List any discrepancies, provide relevant context, and cite your web sources whenever possible.\n"
-        f"Bill text:\n{bill_text}"
+
+        "You are connected to Perplexity's Sonar Deep Research engine. "
+        "Search the web thoroughly for each billing code and any known clerical errors, "
+        "typical pricing ranges, or duplicate charge issues. "
+        "Use this information to provide the most comprehensive analysis possible.\n"
+        f"Medical bill text:\n{bill_text}"
     )
 
     payload = {
-        "model": "mistralai/magistral-medium-2506",
+        "model": "perplexity/sonar-deep-research",  # Web search model
         "messages": [{"role": "user", "content": search_prompt}],
     }
 
