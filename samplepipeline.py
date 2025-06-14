@@ -70,7 +70,7 @@ def identify_clerical_errors(base64_image: str) -> str:
         input=input_information
     )
 
-    return response
+    return response.choices[0].message.content
 
 def identify_clerical_errors_pdf(base64_images: list) -> str:
     """
