@@ -1,5 +1,6 @@
 import os
 import base64
+import requests
 from dotenv import load_dotenv
 from openai import OpenAI
 from pdf2image import convert_from_path
@@ -7,13 +8,16 @@ from PIL import Image
 
 load_dotenv()
 
-client = OpenAI()
+OPENROUTER_API_KEY = os.getenv("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")  # Make sure to set this
+
+headers = {
+    "Authorization": f"Bearer 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",
+    "HTTP-Referer": "https://yourdomain.com",  # Replace with your site or GitHub link
+    "X-Title": "Medical Bill Analyzer",
+    "Content-Type": "application/json",
+}
 
 def process_bill_image(image_path: str):
-    """
-    Determines whether the input is a PDF or image and processes accordingly.
-    Returns a single base64 string for image or a list of base64 strings for PDF.
-    """
     ext = os.path.splitext(image_path)[1].lower()
     if ext == ".pdf":
         return process_bill_image_pdf(image_path)
@@ -22,9 +26,6 @@ def process_bill_image(image_path: str):
             return base64.b64encode(img_f.read()).decode("utf-8")
 
 def process_bill_image_pdf(pdf_path: str) -> list:
-    """
-    Converts each page of a PDF into an image and returns a list of base64-encoded strings.
-    """
     pages = convert_from_path(pdf_path, dpi=150)
     base64_images = []
 
@@ -34,49 +35,41 @@ def process_bill_image_pdf(pdf_path: str) -> list:
         with open(temp_image_path, "rb") as img_f:
             encoded = base64.b64encode(img_f.read()).decode("utf-8")
             base64_images.append(encoded)
-        os.remove(temp_image_path)  # Clean up temp file
+        os.remove(temp_image_path)
 
     return base64_images
 
 def identify_clerical_errors(base64_image: str) -> str:
-    """
-    Sends a system prompt + user prompt (including a single base64 image)
-    to the Responses API with web_search enabled.
-    """
     with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
         prompt_clerical = f.read()
 
-    # Build messages
     messages = [
-        {"role": "user", "content": [
-            {"type": "text", "text": "Please provide the complete wording of the bill, word for word."},
-            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
-        ]}
+        {
+            "role": "system",
+            "content": prompt_clerical
+        },
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Please provide the complete wording of the bill, word for word."},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
+            ]
+        }
     ]
 
-    response1 = client.responses.create(
-        model="gpt-4o",
-        messages=messages
-    )
+    payload = {
+        "model": "openai/gpt-4-turbo",  # You can replace this with another OpenRouter-supported model
+        "messages": messages
+    }
 
-    bill = response1.choices[0].message.content
+    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
 
-    input_information = f"{prompt_clerical} \n\n\n\n\n Please analyze the provided bill. {bill}"
+    if response.status_code != 200:
+        raise Exception(f"Error: {response.status_code} - {response.text}")
 
-    # Call the Responses API with web_search tool
-    response = client.responses.create(
-        model="gpt-4o",
-        tools=[{"type": "web_search"}],
-        input=input_information
-    )
-
-    return response
+    return response.json()["choices"][0]["message"]["content"]
 
 def identify_clerical_errors_pdf(base64_images: list) -> str:
-    """
-    Handles multiple base64-encoded images from a multi-page PDF.
-    Sends them all in one prompt.
-    """
     with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
         prompt_clerical = f.read()
 
@@ -94,12 +87,17 @@ def identify_clerical_errors_pdf(base64_images: list) -> str:
         {"role": "user", "content": user_content}
     ]
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages
-    )
+    payload = {
+        "model": "openai/gpt-4-turbo",  # Replace if needed
+        "messages": messages
+    }
 
-    return response.choices[0].message.content
+    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+
+    if response.status_code != 200:
+        raise Exception(f"Error: {response.status_code} - {response.text}")
+
+    return response.json()["choices"][0]["message"]["content"]
 
 if __name__ == "__main__":
     image_path = "medicalbills/4_18_25.pdf"
