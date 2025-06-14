@@ -14,14 +14,12 @@ load_dotenv()
 # Setup API keys
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")  # Set in .env
 
-headers = {
-    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-    "HTTP-Referer": "https://yourdomain.com",  # Replace appropriately
-    "X-Title": "Medical Bill Analyzer",
-    "Content-Type": "application/json",
-}
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")  # Set in .env
+if not OPENROUTER_API_KEY:
+    raise EnvironmentError(
+        "OPENROUTER_API_KEY is missing. Set it in your environment or .env file."
+    )
 
 
 def process_bill_image(image_path: str):
@@ -87,6 +85,11 @@ def extract_text_from_image(base64_image: str) -> str:
 
 def analyze_with_web_search(bill_text: str) -> str:
     """Uses OpenRouter to search the web for additional context or errors."""
+    if not OPENROUTER_API_KEY:
+        raise EnvironmentError(
+            "OPENROUTER_API_KEY is not configured. Set it in your environment or .env file."
+        )
+
     with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
         prompt_clerical = f.read()
 
@@ -97,6 +100,13 @@ def analyze_with_web_search(bill_text: str) -> str:
     payload = {
         "model": "openai/gpt-4o:online",  # Or "openai/gpt-4o-search-preview"
         "messages": [{"role": "user", "content": search_prompt}],
+    }
+
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "HTTP-Referer": "https://yourdomain.com",  # Replace appropriately
+        "X-Title": "Medical Bill Analyzer",
+        "Content-Type": "application/json",
     }
 
     response = requests.post(
