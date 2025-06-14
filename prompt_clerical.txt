@@ -139,8 +139,7 @@ Before you start writing the email, please mark this section for the user by say
    1. **Subject Line**  (“Request for Billing Adjustment”).  
    2. **Greeting** (e.g., “Dear Billing Department,”).  
    3. **Brief Intro**: “I have reviewed my bill for [Date(s) of Service] and found the following clerical errors that resulted in overcharges.”  
-   4. **Error Summary Section**: For each error (use the exact info from your “List of Errors Found.” ALSO MAKE SURE YOU LIST THE ERRORS YOU ARE 
-   COMPLETELY SURE ABOUT BEFORE MOVING ON TO THE ERRORS THAT YOU ARE UNSURE ABOUT, AND DO NOT MENTION ANYTHING ABOUT YOU BEING UNSURE**), list:  
+   4. **Error Summary Section**: For each error (use the exact info from your “List of Errors Found.” List the items you are completely sure about first, and then include any that you are less certain about, noting the uncertainty if needed), list:
       - Billing Code (CPT/HCPCS/ADA/UB-04)  
       - Description (verbatim)  
       - Original Charge  
