@@ -2,18 +2,14 @@ import os
 import base64
 import requests
 from dotenv import load_dotenv
-from openai import OpenAI, APIConnectionError
+from openai import OpenAI
 from pdf2image import convert_from_path
 from PIL import Image
-import pytesseract
-from io import BytesIO
-import json
 
 load_dotenv()
 
-# Setup API keys
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+# Setup API client
+openai_client = OpenAI()
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")  # Set in .env
 if not OPENROUTER_API_KEY:
@@ -46,41 +42,51 @@ def process_bill_image_pdf(pdf_path: str) -> list:
     return base64_images
 
 
-def extract_text_from_image(base64_image: str) -> str:
-    """Uses OpenAI GPT-4o to extract full bill text from an image."""
+PROMPT_TRANSCRIBE = "Transcribe the bill"
+
+
+def transcribe_bill_image(base64_image: str) -> str:
+    """Send a single image to GPT-4.1 for transcription."""
     messages = [
+        {"role": "system", "content": PROMPT_TRANSCRIBE},
         {
             "role": "user",
             "content": [
-                {
-                    "type": "text",
-                    "text": "If you are unable to read the bill, say 'I am unable.' Otherwise, provide the total price of the bill",
-                },
+                {"type": "text", "text": "Please analyze the provided bill."},
                 {
                     "type": "image_url",
                     "image_url": {"url": f"data:image/png;base64,{base64_image}"},
                 },
             ],
-        }
+        },
     ]
 
-    try:
-        if openai_client is None:
-            raise APIConnectionError(
-                message="OPENAI_API_KEY not configured", request=None
-            )
-        response = openai_client.chat.completions.create(
-            model="gpt-4o", messages=messages
+    response = openai_client.chat.completions.create(
+        model="gpt-4.1", messages=messages
+    )
+    return response.choices[0].message.content
+
+
+def transcribe_bill_pdf(base64_images: list) -> str:
+    """Send all PDF pages to GPT-4.1 in a single prompt."""
+    user_content = [{"type": "text", "text": "Please analyze the provided bill."}]
+    for b64 in base64_images:
+        user_content.append(
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/png;base64,{b64}"},
+            }
         )
-        return response.choices[0].message.content
-    except Exception as e:
-        print(f"[WARN] OpenAI API failed ({e}), falling back to pytesseract")
-        try:
-            image_bytes = base64.b64decode(base64_image)
-            image = Image.open(BytesIO(image_bytes))
-            return pytesseract.image_to_string(image)
-        except Exception as fallback_error:
-            raise Exception(f"Fallback OCR failed: {fallback_error}")
+
+    messages = [
+        {"role": "system", "content": PROMPT_TRANSCRIBE},
+        {"role": "user", "content": user_content},
+    ]
+
+    response = openai_client.chat.completions.create(
+        model="gpt-4.1", messages=messages
+    )
+    return response.choices[0].message.content
 
 
 def analyze_with_web_search(bill_text: str) -> str:
@@ -130,12 +136,10 @@ if __name__ == "__main__":
 
     if ext == ".pdf":
         base64_images = process_bill_image(image_path)
-        combined_text = ""
-        for b64 in base64_images:
-            combined_text += extract_text_from_image(b64) + "\n"
+        combined_text = transcribe_bill_pdf(base64_images)
     else:
         base64_image = process_bill_image(image_path)
-        combined_text = extract_text_from_image(base64_image)
+        combined_text = transcribe_bill_image(base64_image)
 
     print("=== Extracted Bill Text ===")
     print(combined_text)

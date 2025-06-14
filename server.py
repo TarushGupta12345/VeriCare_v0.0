@@ -6,7 +6,8 @@ import os
 import traceback
 from samplepipeline import (
     process_bill_image,
-    extract_text_from_image,
+    transcribe_bill_image,
+    transcribe_bill_pdf,
     analyze_with_web_search,
 )
 
@@ -33,18 +34,15 @@ def analyze_bill(file: UploadFile = File(...)):
         print(f"[INFO] Uploaded file saved to: {temp_path}")
 
         ext = os.path.splitext(temp_path)[1].lower()
-        combined_text = ""
 
         if ext == ".pdf":
             images = process_bill_image(temp_path)
             print(f"[INFO] Extracted {len(images)} image(s) from PDF")
-            for i, b64 in enumerate(images):
-                print(f"[INFO] Extracting text from image {i+1}...")
-                combined_text += extract_text_from_image(b64) + "\n"
+            combined_text = transcribe_bill_pdf(images)
         else:
             image = process_bill_image(temp_path)
             print("[INFO] Extracting text from single image...")
-            combined_text = extract_text_from_image(image)
+            combined_text = transcribe_bill_image(image)
 
         os.remove(temp_path)
         print("[INFO] Temp file deleted")
