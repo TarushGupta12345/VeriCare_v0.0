@@ -41,36 +41,36 @@ def process_bill_image_pdf(pdf_path: str) -> list:
 def identify_clerical_errors(base64_image: str) -> str:
     """
     Sends a system prompt + user prompt (including a single base64 image)
-    to gpt-4.1 using the v1 Chat Completions API.
+    to the Responses API with web_search enabled.
     """
     with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
         prompt_clerical = f.read()
 
+    # Build messages
     messages = [
-        {
-            "role": "system",
-            "content": prompt_clerical
-        },
-        {
-            "role": "user",
-            "content": [
-                {"type": "text", "text": "Please analyze the provided bill."},
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/png;base64,{base64_image}"
-                    }
-                }
-            ]
-        }
+        {"role": "user", "content": [
+            {"type": "text", "text": "Please provide the complete wording of the bill, word for word."},
+            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
+        ]}
     ]
 
-    response = client.chat.completions.create(
-        model="gpt-4.1",
+    response1 = client.responses.create(
+        model="gpt-4o",
         messages=messages
     )
 
-    return response.choices[0].message.content
+    bill = response1.choices[0].message.content
+
+    input_information = f"{prompt_clerical} \n\n\n\n\n Please analyze the provided bill. {bill}"
+
+    # Call the Responses API with web_search tool
+    response = client.responses.create(
+        model="gpt-4o",
+        tools=[{"type": "web_search"}],
+        input=input_information
+    )
+
+    return response
 
 def identify_clerical_errors_pdf(base64_images: list) -> str:
     """
