@@ -1,13 +1,23 @@
 import os
 import base64
 from dotenv import load_dotenv
-from openai import OpenAI
 from pdf2image import convert_from_path
 from PIL import Image
 
+try:
+    from openai import OpenAI
+except Exception:  # pragma: no cover - openai may not be installed
+    OpenAI = None
+
 load_dotenv()
 
-client = OpenAI()
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+USE_STUB = os.environ.get("STUB_OPENAI") == "1" or OpenAI is None or not OPENAI_API_KEY
+
+if not USE_STUB:
+    client = OpenAI(api_key=OPENAI_API_KEY)
+else:
+    client = None
 
 def process_bill_image(image_path: str):
     """
@@ -43,32 +53,27 @@ def identify_clerical_errors(base64_image: str) -> str:
     Sends a system prompt + user prompt (including a single base64 image)
     to the Responses API with web_search enabled.
     """
+    if USE_STUB:
+        return "Analysis completed (stub mode)."
+
     with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
         prompt_clerical = f.read()
 
-    # Build messages
     messages = [
-        {"role": "user", "content": [
-            {"type": "text", "text": "Please provide the complete wording of the bill, word for word."},
-            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
-        ]}
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Please provide the complete wording of the bill, word for word."},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}},
+            ],
+        }
     ]
 
-    response1 = client.responses.create(
-        model="gpt-4o",
-        messages=messages
-    )
-
+    response1 = client.responses.create(model="gpt-4o", messages=messages)
     bill = response1.choices[0].message.content
 
     input_information = f"{prompt_clerical} \n\n\n\n\n Please analyze the provided bill. {bill}"
-
-    # Call the Responses API with web_search tool
-    response = client.responses.create(
-        model="gpt-4o",
-        tools=[{"type": "web_search"}],
-        input=input_information
-    )
+    response = client.responses.create(model="gpt-4o", tools=[{"type": "web_search"}], input=input_information)
 
     return response
 
@@ -77,6 +82,9 @@ def identify_clerical_errors_pdf(base64_images: list) -> str:
     Handles multiple base64-encoded images from a multi-page PDF.
     Sends them all in one prompt.
     """
+    if USE_STUB:
+        return "PDF analysis completed (stub mode)."
+
     with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
         prompt_clerical = f.read()
 
@@ -84,21 +92,15 @@ def identify_clerical_errors_pdf(base64_images: list) -> str:
     for b64 in base64_images:
         user_content.append({
             "type": "image_url",
-            "image_url": {
-                "url": f"data:image/png;base64,{b64}"
-            }
+            "image_url": {"url": f"data:image/png;base64,{b64}"},
         })
 
     messages = [
         {"role": "system", "content": prompt_clerical},
-        {"role": "user", "content": user_content}
+        {"role": "user", "content": user_content},
     ]
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages
-    )
-
+    response = client.chat.completions.create(model="gpt-4o", messages=messages)
     return response.choices[0].message.content
 
 if __name__ == "__main__":
