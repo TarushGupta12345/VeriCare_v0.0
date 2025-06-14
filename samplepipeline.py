@@ -54,7 +54,7 @@ def extract_text_from_image(base64_image: str) -> str:
             "content": [
                 {
                     "type": "text",
-                    "text": "Please provide the complete wording of the bill, word for word.",
+                    "text": "If you are unable to read the bill, say 'I am unable.' Otherwise, provide the total price of the bill",
                 },
                 {
                     "type": "image_url",
@@ -125,7 +125,7 @@ def analyze_with_web_search(bill_text: str) -> str:
 
 
 if __name__ == "__main__":
-    image_path = "medicalbills/4_18_25.pdf"
+    image_path = "medicalbills/4_18_25.png"
     ext = os.path.splitext(image_path)[1].lower()
 
     if ext == ".pdf":
