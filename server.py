@@ -34,17 +34,22 @@ def analyze_bill(file: UploadFile = File(...)):
 
         ext = os.path.splitext(temp_path)[1].lower()
         combined_text = ""
+        mime_type = "image/png"
+        if ext in [".jpg", ".jpeg"]:
+            mime_type = "image/jpeg"
+        elif ext == ".png":
+            mime_type = "image/png"
 
         if ext == ".pdf":
             images = process_bill_image(temp_path)
             print(f"[INFO] Extracted {len(images)} image(s) from PDF")
             for i, b64 in enumerate(images):
                 print(f"[INFO] Extracting text from image {i+1}...")
-                combined_text += extract_text_from_image(b64) + "\n"
+                combined_text += extract_text_from_image(b64, mime_type="image/png") + "\n"
         else:
             image = process_bill_image(temp_path)
             print("[INFO] Extracting text from single image...")
-            combined_text = extract_text_from_image(image)
+            combined_text = extract_text_from_image(image, mime_type=mime_type)
 
         os.remove(temp_path)
         print("[INFO] Temp file deleted")

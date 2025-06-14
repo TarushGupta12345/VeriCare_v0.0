@@ -46,8 +46,9 @@ def process_bill_image_pdf(pdf_path: str) -> list:
     return base64_images
 
 
-def extract_text_from_image(base64_image: str) -> str:
+def extract_text_from_image(base64_image: str, mime_type: str = "image/png") -> str:
     """Uses OpenAI GPT-4o to extract full bill text from an image."""
+    print(f"[DEBUG] OCR with OpenAI. Mime: {mime_type}, base64 length: {len(base64_image)}")
     messages = [
         {
             "role": "user",
@@ -58,7 +59,7 @@ def extract_text_from_image(base64_image: str) -> str:
                 },
                 {
                     "type": "image_url",
-                    "image_url": {"url": f"data:image/png;base64,{base64_image}"},
+                    "image_url": {"url": f"data:{mime_type};base64,{base64_image}"},
                 },
             ],
         }
@@ -127,10 +128,13 @@ if __name__ == "__main__":
         base64_images = process_bill_image(image_path)
         combined_text = ""
         for b64 in base64_images:
-            combined_text += extract_text_from_image(b64) + "\n"
+            combined_text += extract_text_from_image(b64, mime_type="image/png") + "\n"
     else:
         base64_image = process_bill_image(image_path)
-        combined_text = extract_text_from_image(base64_image)
+        mime = "image/png"
+        if ext in [".jpg", ".jpeg"]:
+            mime = "image/jpeg"
+        combined_text = extract_text_from_image(base64_image, mime_type=mime)
 
     print("=== Extracted Bill Text ===")
     print(combined_text)
