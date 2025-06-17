@@ -109,7 +109,7 @@ def analyze_with_web_search(bill_text: str) -> str:
     )
 
     payload = {
-        "model": "perplexity/sonar-deep-research",  # Web search model
+        "model": "microsoft/phi-4-reasoning:free",  # Web search model
         "messages": [{"role": "user", "content": search_prompt}],
     }
 
@@ -131,7 +131,7 @@ def analyze_with_web_search(bill_text: str) -> str:
 
 
 if __name__ == "__main__":
-    image_path = "medicalbills/4_18_25.png"
+    image_path = "medicalbills/4_18_25.pdf"
     ext = os.path.splitext(image_path)[1].lower()
 
     if ext == ".pdf":
