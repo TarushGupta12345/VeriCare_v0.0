@@ -12,6 +12,7 @@ medicalbills/
 #.DS_Store
 .DS_Store
 #Loveable Uploads
-loveable-uploads/
-favicon.ico
-placeholder.svg
+frontend/public/loveable-uploads/
+frontend/public/favicon.ico
+frontend/public/placeholder.svg
+frontend/node_modules/
