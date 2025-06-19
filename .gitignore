@@ -11,3 +11,7 @@ __pycache__/
 medicalbills/
 #.DS_Store
 .DS_Store
+#Loveable Uploads
+loveable-uploads/
+favicon.ico
+placeholder.svg
