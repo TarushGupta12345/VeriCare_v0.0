@@ -101,6 +101,7 @@ def analyze_with_web_search(bill_text: str) -> str:
 
     search_prompt = (
         f"{prompt_clerical}\n\n"
+
         "You are connected to Perplexity's Sonar Deep Research engine. "
         "Search the web thoroughly for each billing code and any known clerical errors, "
         "typical pricing ranges, or duplicate charge issues. "
