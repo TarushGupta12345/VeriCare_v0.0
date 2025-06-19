@@ -1,14 +1,16 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LayoutDashboard, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [bills] = useState([
+  const location = useLocation();
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+  const [bills, setBills] = useState([
     {
       id: "BILL-001",
       patientName: "John Smith",
@@ -42,6 +44,30 @@ const Dashboard = () => {
       submittedDate: "2024-01-08",
     },
   ]);
+
+  useEffect(() => {
+    const state = location.state as {
+      analysis?: string;
+      rawText?: string;
+      patientName?: string;
+    } | null;
+
+    if (state?.analysis) {
+      setAnalysisResult(state.analysis);
+      // Prepend a simple bill entry so the table reflects the new analysis
+      setBills((prev) => [
+        {
+          id: `BILL-${prev.length + 1}`,
+          patientName: state.patientName || "Unknown",
+          billAmount: "-",
+          potentialSavings: "-",
+          status: "Analyzed",
+          submittedDate: new Date().toISOString().split("T")[0],
+        },
+        ...prev,
+      ]);
+    }
+  }, [location.state]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -151,6 +177,13 @@ const Dashboard = () => {
             </div>
           </Card>
         </div>
+
+        {analysisResult && (
+          <Card className="p-6 mb-8">
+            <h2 className="text-xl font-semibold text-med-charcoal mb-2">Latest Bill Analysis</h2>
+            <p className="whitespace-pre-wrap text-med-muted">{analysisResult}</p>
+          </Card>
+        )}
 
         {/* Bills Table */}
         <Card className="p-6">
