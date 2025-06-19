@@ -64,7 +64,7 @@ def transcribe_bill_image(base64_image: str) -> str:
             ],
         },
     ]
-    response = openai_client.chat.completions.create(model="o3", messages=messages)
+    response = openai_client.chat.completions.create(model="o1", messages=messages)
     return response.choices[0].message.content
 
 
@@ -79,7 +79,7 @@ def transcribe_bill_pdf(base64_images: list) -> str:
         {"role": "system", "content": PROMPT_TRANSCRIBE},
         {"role": "user", "content": user_content},
     ]
-    response = openai_client.chat.completions.create(model="o3", messages=messages)
+    response = openai_client.chat.completions.create(model="o1", messages=messages)
     return response.choices[0].message.content
 
 
@@ -93,19 +93,19 @@ def analyze_with_multiple_models(bill_text: str) -> list:
 
     results = []
 
-    # Use OpenAI's o3 model
+    # Use OpenAI's o1 model
     try:
         response = openai_client.chat.completions.create(
-            model="o3",
+            model="o1",
             messages=[
                 {"role": "system", "content": PROMPT_ANALYZE},
                 {"role": "user", "content": bill_text},
             ],
         )
-        o3_result = response.choices[0].message.content
-        results.append(o3_result)
+        o1_result = response.choices[0].message.content
+        results.append(o1_result)
     except Exception as e:
-        print(f"[Exception] Skipping OpenAI gpt-o3 model: {str(e)}")
+        print(f"[Exception] Skipping OpenAI gpt-o1 model: {str(e)}")
 
     # Use OpenRouter models
     for idx, model in enumerate(openrouter_models):
@@ -150,7 +150,7 @@ def compile_final_report(results: list) -> str:
         {"role": "user", "content": combined_input},
     ]
 
-    response = openai_client.chat.completions.create(model="o3-mini", messages=messages)
+    response = openai_client.chat.completions.create(model="o1", messages=messages)
     return response.choices[0].message.content
 
 
