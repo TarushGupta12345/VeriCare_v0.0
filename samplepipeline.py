@@ -137,6 +137,35 @@ def compile_final_report(results: list) -> str:
     return response.choices[0].message.content
 
 
+def analyze_with_web_search(bill_text: str) -> str:
+    """Run a web-enabled model via OpenRouter to analyze the bill text."""
+    with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
+        prompt = f.read()
+
+    payload = {
+        "model": "openai/gpt-4o:online",
+        "messages": [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": bill_text},
+        ],
+    }
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "HTTP-Referer": "https://yourdomain.com",
+        "X-Title": "Medical Bill Analyzer - Web Search",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload
+    )
+    if response.status_code != 200:
+        raise Exception(
+            f"Search model error: {response.status_code} - {response.text}"
+        )
+    return response.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+
+
 if __name__ == "__main__":
     image_path = "medicalbills/4_18_25_copy.png"
     ext = os.path.splitext(image_path)[1].lower()
