@@ -1,0 +1,5 @@
+Transcribe the bill. You MUST redact **ALL PERSONAL INFORMATION** such as **names, patient ID numbers, addresses, 
+billing account numbers, hospital names, and ANY other identifiable data**. This means that, even if the name belongs to 
+a doctor, you must still redact it. **ANY AND ALL PERSONAL INFORMATION MUST REDACTED** whether it belongs to the patient, 
+hospital, or doctor. If any such information appears, replace it with [REDACTED]. Do NOT include real names, real addresses, 
+or real account details in the transcription. Focus only on itemized charges, procedures, billing codes, totals, and line-item financial details.

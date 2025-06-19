@@ -8,12 +8,22 @@ from PIL import Image
 
 load_dotenv()
 
-# Setup API client
+# Setup OpenAI API client
 openai_client = OpenAI()
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_API_KEY:
     raise EnvironmentError("OPENROUTER_API_KEY is missing. Set it in your environment or .env file.")
+
+# Load prompts from external text files
+with open("prompt_transcribe.txt", "r", encoding="utf-8") as f:
+    PROMPT_TRANSCRIBE = f.read()
+
+with open("prompt_analyze.txt", "r", encoding="utf-8") as f:
+    PROMPT_ANALYZE = f.read()
+
+with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
+    PROMPT_CLERICAL = f.read()
 
 
 def process_bill_image(image_path: str):
@@ -40,16 +50,13 @@ def process_bill_image_pdf(pdf_path: str) -> list:
     return base64_images
 
 
-PROMPT_TRANSCRIBE = "Transcribe the bill"
-
-
 def transcribe_bill_image(base64_image: str) -> str:
     messages = [
         {"role": "system", "content": PROMPT_TRANSCRIBE},
         {
             "role": "user",
             "content": [
-                {"type": "text", "text": "Please analyze the provided bill."},
+                {"type": "text", "text": "Please analyze the provided bill and follow the redaction instructions."},
                 {
                     "type": "image_url",
                     "image_url": {"url": f"data:image/png;base64,{base64_image}"},
@@ -57,12 +64,12 @@ def transcribe_bill_image(base64_image: str) -> str:
             ],
         },
     ]
-    response = openai_client.chat.completions.create(model="gpt-4.1", messages=messages)
+    response = openai_client.chat.completions.create(model="o3", messages=messages)
     return response.choices[0].message.content
 
 
 def transcribe_bill_pdf(base64_images: list) -> str:
-    user_content = [{"type": "text", "text": "Please analyze the provided bill."}]
+    user_content = [{"type": "text", "text": "Please analyze the provided bill and follow the redaction instructions."}]
     for b64 in base64_images:
         user_content.append({
             "type": "image_url",
@@ -72,28 +79,41 @@ def transcribe_bill_pdf(base64_images: list) -> str:
         {"role": "system", "content": PROMPT_TRANSCRIBE},
         {"role": "user", "content": user_content},
     ]
-    response = openai_client.chat.completions.create(model="gpt-4.1", messages=messages)
+    response = openai_client.chat.completions.create(model="o3", messages=messages)
     return response.choices[0].message.content
 
 
 def analyze_with_multiple_models(bill_text: str) -> list:
-    with open("prompt_analyze.txt", "r", encoding="utf-8") as f:
-        prompt_analyze = f.read()
-
-    models = [
+    openrouter_models = [
         "microsoft/phi-4-reasoning-plus:free",
         "meta-llama/llama-3.3-8b-instruct:free",
         "microsoft/mai-ds-r1:free",
-        "opengvlab/internvl3-14b:free"
+        "opengvlab/internvl3-14b:free",
     ]
 
     results = []
-    for idx, model in enumerate(models):
+
+    # Use OpenAI's o3 model
+    try:
+        response = openai_client.chat.completions.create(
+            model="o3",
+            messages=[
+                {"role": "system", "content": PROMPT_ANALYZE},
+                {"role": "user", "content": bill_text},
+            ],
+        )
+        o3_result = response.choices[0].message.content
+        results.append(o3_result)
+    except Exception as e:
+        print(f"[Exception] Skipping OpenAI gpt-o3 model: {str(e)}")
+
+    # Use OpenRouter models
+    for idx, model in enumerate(openrouter_models):
         try:
             payload = {
                 "model": model,
                 "messages": [
-                    {"role": "system", "content": prompt_analyze},
+                    {"role": "system", "content": PROMPT_ANALYZE},
                     {"role": "user", "content": bill_text},
                 ],
             }
@@ -115,59 +135,27 @@ def analyze_with_multiple_models(bill_text: str) -> list:
             else:
                 print(f"[Warning] Model {idx+1} returned empty content")
         except Exception as e:
-            print(f"[Exception] Skipping Model {idx+1}: {str(e)}")
+            print(f"[Exception] Skipping OpenRouter model {idx+1}: {str(e)}")
 
     return results
 
 
 def compile_final_report(results: list) -> str:
-    with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
-        prompt_clerical = f.read()
-
     combined_input = "\n\n--- MODEL RESPONSES ---\n\n" + "\n\n".join(
         [f"Model {i+1} Response:\n{res}" for i, res in enumerate(results)]
     )
 
     messages = [
-        {"role": "system", "content": prompt_clerical},
+        {"role": "system", "content": PROMPT_CLERICAL},
         {"role": "user", "content": combined_input},
     ]
 
-    response = openai_client.chat.completions.create(model="gpt-4.1", messages=messages)
+    response = openai_client.chat.completions.create(model="o3-mini", messages=messages)
     return response.choices[0].message.content
 
 
-def analyze_with_web_search(bill_text: str) -> str:
-    """Run a web-enabled model via OpenRouter to analyze the bill text."""
-    with open("prompt_clerical.txt", "r", encoding="utf-8") as f:
-        prompt = f.read()
-
-    payload = {
-        "model": "openai/gpt-4o:online",
-        "messages": [
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": bill_text},
-        ],
-    }
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "HTTP-Referer": "https://yourdomain.com",
-        "X-Title": "Medical Bill Analyzer - Web Search",
-        "Content-Type": "application/json",
-    }
-
-    response = requests.post(
-        "https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload
-    )
-    if response.status_code != 200:
-        raise Exception(
-            f"Search model error: {response.status_code} - {response.text}"
-        )
-    return response.json().get("choices", [{}])[0].get("message", {}).get("content", "")
-
-
 if __name__ == "__main__":
-    image_path = "medicalbills/4_18_25_copy.png"
+    image_path = "medicalbills/4_18_25_unredacted.png"
     ext = os.path.splitext(image_path)[1].lower()
 
     if ext == ".pdf":
