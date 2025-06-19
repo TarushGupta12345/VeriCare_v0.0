@@ -13,9 +13,9 @@ const Login = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simple validation - if both fields have content, proceed to dashboard
+    // Simple validation - if both fields have content, proceed to upload page
     if (username.trim() && password.trim()) {
-      navigate("/dashboard");
+      navigate("/upload-bill");
     }
   };
 

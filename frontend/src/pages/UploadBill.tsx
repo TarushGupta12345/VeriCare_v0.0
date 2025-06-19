@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload, ArrowLeft } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 
 const UploadBill = () => {
   const navigate = useNavigate();
@@ -24,12 +25,34 @@ const UploadBill = () => {
     if (!billFile || !patientName.trim()) return;
 
     setIsUploading(true);
-    
-    // Simulate upload process
-    setTimeout(() => {
+
+    try {
+      const formData = new FormData();
+      formData.append("file", billFile);
+
+      const response = await fetch(
+        import.meta.env.VITE_BACKEND_URL?.concat("/analyze-bill") ||
+          "http://localhost:8000/analyze-bill",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await response.json();
+      console.log("Analysis result", data);
+      toast("Bill analyzed successfully");
+    } catch (err) {
+      console.error(err);
+      toast("Failed to analyze bill");
+    } finally {
       setIsUploading(false);
       navigate("/dashboard");
-    }, 2000);
+    }
   };
 
   const handleBack = () => {
