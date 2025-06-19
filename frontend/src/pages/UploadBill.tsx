@@ -46,12 +46,18 @@ const UploadBill = () => {
       const data = await response.json();
       console.log("Analysis result", data);
       toast("Bill analyzed successfully");
+      navigate("/dashboard", {
+        state: {
+          analysis: data.analysis,
+          rawText: data.raw_text,
+          patientName,
+        },
+      });
     } catch (err) {
       console.error(err);
       toast("Failed to analyze bill");
     } finally {
       setIsUploading(false);
-      navigate("/dashboard");
     }
   };
 
