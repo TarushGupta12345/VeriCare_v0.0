@@ -52,11 +52,10 @@ def process_bill_image_pdf(pdf_path: str) -> list:
 
 def transcribe_bill_image(base64_image: str) -> str:
     messages = [
-        {"role": "system", "content": PROMPT_TRANSCRIBE},
         {
             "role": "user",
             "content": [
-                {"type": "text", "text": "Please analyze the provided bill and follow the redaction instructions."},
+                {"type": "text", "text": PROMPT_TRANSCRIBE + "\n\nPlease analyze the provided bill and follow the redaction instructions."},
                 {
                     "type": "image_url",
                     "image_url": {"url": f"data:image/png;base64,{base64_image}"},
@@ -64,22 +63,19 @@ def transcribe_bill_image(base64_image: str) -> str:
             ],
         },
     ]
-    response = openai_client.chat.completions.create(model="o1", messages=messages)
+    response = openai_client.chat.completions.create(model="gpt-4.1", messages=messages)
     return response.choices[0].message.content
 
 
 def transcribe_bill_pdf(base64_images: list) -> str:
-    user_content = [{"type": "text", "text": "Please analyze the provided bill and follow the redaction instructions."}]
-    for b64 in base64_images:
-        user_content.append({
-            "type": "image_url",
-            "image_url": {"url": f"data:image/png;base64,{b64}"},
-        })
     messages = [
-        {"role": "system", "content": PROMPT_TRANSCRIBE},
-        {"role": "user", "content": user_content},
+        {
+            "role": "user",
+            "content": [{"type": "text", "text": PROMPT_TRANSCRIBE + "\n\nPlease analyze the provided bill and follow the redaction instructions."}] +
+                       [{"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}} for b64 in base64_images],
+        }
     ]
-    response = openai_client.chat.completions.create(model="o1", messages=messages)
+    response = openai_client.chat.completions.create(model="gpt-4.1", messages=messages)
     return response.choices[0].message.content
 
 
@@ -93,19 +89,18 @@ def analyze_with_multiple_models(bill_text: str) -> list:
 
     results = []
 
-    # Use OpenAI's o1 model
+    # Use OpenAI's o1-mini model
     try:
         response = openai_client.chat.completions.create(
-            model="o1",
+            model="o1-mini",
             messages=[
-                {"role": "system", "content": PROMPT_ANALYZE},
-                {"role": "user", "content": bill_text},
+                {"role": "user", "content": PROMPT_ANALYZE + "\n\n" + bill_text},
             ],
         )
         o1_result = response.choices[0].message.content
         results.append(o1_result)
     except Exception as e:
-        print(f"[Exception] Skipping OpenAI gpt-o1 model: {str(e)}")
+        print(f"[Exception] Skipping OpenAI o1-mini model: {str(e)}")
 
     # Use OpenRouter models
     for idx, model in enumerate(openrouter_models):
@@ -146,11 +141,10 @@ def compile_final_report(results: list) -> str:
     )
 
     messages = [
-        {"role": "system", "content": PROMPT_CLERICAL},
-        {"role": "user", "content": combined_input},
+        {"role": "user", "content": PROMPT_CLERICAL + "\n\n" + combined_input},
     ]
 
-    response = openai_client.chat.completions.create(model="o1", messages=messages)
+    response = openai_client.chat.completions.create(model="o1-mini", messages=messages)
     return response.choices[0].message.content
 
 
